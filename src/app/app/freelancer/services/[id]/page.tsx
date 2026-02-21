@@ -275,7 +275,7 @@ export default function ServiceDetailsPage({ params }: PageProps): React.JSX.Ele
 
   if (!service) {
     return (
-      <div className="flex items-center justify-center min-h-100">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className={cn(NEUMORPHIC_CARD, "text-center max-w-md")}>
           <div
             className={cn(
