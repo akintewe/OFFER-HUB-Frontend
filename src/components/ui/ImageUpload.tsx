@@ -48,30 +48,60 @@ export function ImageUpload({
   );
 
   const handleFiles = useCallback(
-    (files: FileList | null) => {
+    async (files: FileList | null) => {
       if (!files || files.length === 0) return;
 
       setError(null);
       const newFiles: File[] = [];
       let validationError: string | null = null;
 
+      const processFile = async (file: File): Promise<string | null> => {
+        let err = validateFile(file);
+        if (!err && aspectRatio !== "free" && file.type.startsWith("image/")) {
+          const isValidRatio = await new Promise<boolean>((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              const ratio = img.width / img.height;
+              let isValid = true;
+              if (aspectRatio === "square") {
+                isValid = ratio >= 0.9 && ratio <= 1.1; // Allow slight variations
+              } else if (aspectRatio === "wide") {
+                isValid = ratio >= 1.5; // E.g., 16:9 is 1.77
+              }
+              URL.revokeObjectURL(img.src);
+              resolve(isValid);
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(img.src);
+              resolve(false);
+            };
+            img.src = URL.createObjectURL(file);
+          });
+          if (!isValidRatio) {
+            err = `Image must have a ${aspectRatio} aspect ratio`;
+          }
+        }
+        return err;
+      };
+
       if (variant === "single") {
         const file = files[0];
-        validationError = validateFile(file);
+        validationError = await processFile(file);
         if (!validationError) {
           newFiles.push(file);
           const newPreview = URL.createObjectURL(file);
           setPreview(newPreview);
         }
       } else {
-        Array.from(files).forEach((file) => {
-          const err = validateFile(file);
+        for (const file of Array.from(files)) {
+          const err = await processFile(file);
           if (err) {
             validationError = err;
+            break;
           } else {
             newFiles.push(file);
           }
-        });
+        }
       }
 
       if (validationError) {
@@ -82,7 +112,7 @@ export function ImageUpload({
         onUpload(newFiles);
       }
     },
-    [variant, validateFile, onUpload]
+    [variant, validateFile, onUpload, aspectRatio]
   );
 
   const onDragOver = (e: React.DragEvent) => {
@@ -121,6 +151,15 @@ export function ImageUpload({
       >
         <div
           onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          aria-label={label ? `Upload ${label}` : "Upload profile photo"}
           className={cn(
             "relative w-24 h-24 rounded-full flex items-center justify-center overflow-hidden cursor-pointer group transition-all duration-200",
             "bg-primary/5 border-2 border-dashed border-border-light",
@@ -169,6 +208,15 @@ export function ImageUpload({
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        aria-label={label ? `Upload ${label}` : "Upload files"}
         className={cn(
           "border-2 border-dashed border-border-light rounded-xl p-8",
           "flex flex-col items-center justify-center gap-3",

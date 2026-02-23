@@ -123,14 +123,6 @@ function validateProfileForm(formData: ProfileFormData): FormErrors {
   return errors;
 }
 
-const PHOTO_SECTION_STYLES = cn("flex items-center gap-4 py-2");
-
-const AVATAR_PLACEHOLDER_STYLES = cn(
-  "w-18 h-18 rounded-full flex items-center justify-center",
-  "bg-primary text-white text-xl font-bold",
-  "shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff]"
-);
-
 export default function ProfilePage(): React.JSX.Element {
   const user = useAuthStore((state) => state.user);
   const [isLoading, setIsLoading] = useState(false);

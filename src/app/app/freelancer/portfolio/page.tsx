@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { Icon, ICON_PATHS, LoadingSpinner } from "@/components/ui/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -208,8 +208,6 @@ function PortfolioForm({
   onRemoveImage,
   onCancel,
 }: PortfolioFormProps): React.JSX.Element {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   return (
     <div className={cn(NEUMORPHIC_CARD, "mb-6")}>
       <h2 className="text-lg font-semibold text-text-primary mb-4">
