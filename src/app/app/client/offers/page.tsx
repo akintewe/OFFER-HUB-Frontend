@@ -9,9 +9,8 @@ import { Icon, ICON_PATHS, LoadingSpinner } from "@/components/ui/Icon";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { NEUMORPHIC_CARD, NEUMORPHIC_INSET, ICON_BUTTON, PRIMARY_BUTTON } from "@/lib/styles";
+import { NEUMORPHIC_CARD, NEUMORPHIC_INSET, PRIMARY_BUTTON } from "@/lib/styles";
 import { getMyOffers, deleteOffer, type Offer } from "@/lib/api/offers";
-import { CATEGORIES } from "@/data/client-offer.data";
 import type { ClientOffer, FilterStatus, OfferStatus } from "@/types/client-offer.types";
 
 function mapApiOfferToClientOffer(offer: Offer): ClientOffer {
@@ -250,9 +249,9 @@ export default function ManageOffersPage(): React.JSX.Element {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Offer?"
-        message="Are you sure you want to delete this offer?"
-        confirmText="Delete"
-        cancelText="Cancel"
+        message={`Are you sure you want to delete "${offers.find((o) => o.id === deleteTarget)?.title ?? "this offer"}"? All applicants will be notified.`}
+        confirmText="Delete Offer"
+        cancelText="Keep Offer"
         variant="danger"
         icon={ICON_PATHS.trash}
         isLoading={isConfirming}
@@ -260,3 +259,5 @@ export default function ManageOffersPage(): React.JSX.Element {
     </div>
   );
 }
+
+
