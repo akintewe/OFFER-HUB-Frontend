@@ -2,21 +2,31 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useModeStore } from "@/stores/mode-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { filterActivities, paginateResults } from "@/lib/activity-filters";
-import { FREELANCER_ACTIVITY, ACTIVITY_ICONS } from "@/data/freelancer-dashboard.data";
+import { getFreelancerActivities, type FreelancerActivity } from "@/lib/api/freelancer";
 import { SearchBar } from "@/components/activities/SearchBar";
 import { FilterBar, FilterOption } from "@/components/activities/FilterBar";
 import { ActivityList } from "@/components/activities/ActivityList";
 import { Pagination } from "@/components/ui/Pagination";
-import { cn } from "@/lib/cn";
-import { Icon, ICON_PATHS } from "@/components/ui/Icon";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ICON_PATHS, LoadingSpinner } from "@/components/ui/Icon";
+
+// Map real API activity types to icons
+const ACTIVITY_ICONS: Record<string, string> = {
+    order_created: ICON_PATHS.briefcase,
+    order_completed: ICON_PATHS.check,
+    payment_received: ICON_PATHS.currency,
+    withdrawal_completed: ICON_PATHS.arrowUp,
+    topup_completed: ICON_PATHS.arrowDown,
+};
 
 const FREELANCER_FILTER_OPTIONS: FilterOption[] = [
-    { value: "service_created", label: "Service Created" },
-    { value: "proposal_accepted", label: "Proposal Accepted" },
-    { value: "message", label: "Messages" },
-    { value: "payment_received", label: "Payments" },
-    { value: "review_received", label: "Reviews" },
+    { value: "order_created", label: "Orders Created" },
+    { value: "order_completed", label: "Orders Completed" },
+    { value: "payment_received", label: "Payments Received" },
+    { value: "withdrawal_completed", label: "Withdrawals" },
+    { value: "topup_completed", label: "Top-ups" },
 ];
 
 /**
@@ -25,30 +35,54 @@ const FREELANCER_FILTER_OPTIONS: FilterOption[] = [
  */
 export default function FreelancerActivitiesPage() {
     const { setMode } = useModeStore();
+    const { token } = useAuthStore();
 
-    // State for filters
+    // Data state
+    const [activities, setActivities] = useState<FreelancerActivity[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Filter state
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
     const [sortBy, setSortBy] = useState<"date-desc" | "date-asc" | "type">("date-desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         setMode("freelancer");
-        // Simulate loading
-        const timer = setTimeout(() => setIsLoading(false), 800);
-        return () => clearTimeout(timer);
     }, [setMode]);
+
+    // Fetch activities from API
+    useEffect(() => {
+        async function fetchActivities() {
+            if (!token) return;
+
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const data = await getFreelancerActivities(token);
+                setActivities(data);
+            } catch (err) {
+                console.error("Failed to fetch activities:", err);
+                setError(err instanceof Error ? err.message : "Failed to load activities");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchActivities();
+    }, [token]);
 
     // Combined filtering logic
     const filteredActivities = useMemo(() => {
-        return filterActivities(FREELANCER_ACTIVITY, {
+        return filterActivities(activities, {
             searchQuery,
             selectedTypes,
             sortBy,
         });
-    }, [searchQuery, selectedTypes, sortBy]);
+    }, [activities, searchQuery, selectedTypes, sortBy]);
 
     // Pagination logic
     const { items: paginatedActivities, totalPages } = useMemo(() => {
@@ -73,41 +107,63 @@ export default function FreelancerActivitiesPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                {/* Sidebar Filters */}
-                <div className="lg:col-span-1 space-y-6">
-                    <FilterBar
-                        options={FREELANCER_FILTER_OPTIONS}
-                        selectedTypes={selectedTypes}
-                        onChange={setSelectedTypes}
-                        sortBy={sortBy}
-                        onSortChange={setSortBy}
-                        className="sticky top-24"
-                    />
-                </div>
+            {error ? (
+                <EmptyState
+                    icon={ICON_PATHS.alertCircle}
+                    message={error}
+                />
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    {/* Sidebar Filters */}
+                    <div className="lg:col-span-1 space-y-6">
+                        <FilterBar
+                            options={FREELANCER_FILTER_OPTIONS}
+                            selectedTypes={selectedTypes}
+                            onChange={setSelectedTypes}
+                            sortBy={sortBy}
+                            onSortChange={setSortBy}
+                            className="sticky top-24"
+                        />
+                    </div>
 
-                {/* Content Area */}
-                <div className="lg:col-span-3 space-y-8">
-                    <ActivityList
-                        activities={paginatedActivities}
-                        icons={ACTIVITY_ICONS}
-                        isLoading={isLoading}
-                    />
-
-                    {!isLoading && filteredActivities.length > 0 && (
-                        <div className="pt-4 border-t border-border-light/50">
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                totalItems={filteredActivities.length}
-                                itemsPerPage={itemsPerPage}
-                                onPageChange={setCurrentPage}
-                                onItemsPerPageChange={setItemsPerPage}
+                    {/* Content Area */}
+                    <div className="lg:col-span-3 space-y-8">
+                        {isLoading ? (
+                            <div className="flex items-center justify-center py-16">
+                                <LoadingSpinner className="text-primary" />
+                            </div>
+                        ) : filteredActivities.length === 0 ? (
+                            <EmptyState
+                                icon={ICON_PATHS.clock}
+                                message={searchQuery || selectedTypes.size > 0
+                                    ? "No activities match your filters"
+                                    : "No activities yet. Your activity history will appear here."}
                             />
-                        </div>
-                    )}
+                        ) : (
+                            <>
+                                <ActivityList
+                                    activities={paginatedActivities}
+                                    icons={ACTIVITY_ICONS}
+                                    isLoading={false}
+                                />
+
+                                {filteredActivities.length > 0 && (
+                                    <div className="pt-4 border-t border-border-light/50">
+                                        <Pagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            totalItems={filteredActivities.length}
+                                            itemsPerPage={itemsPerPage}
+                                            onPageChange={setCurrentPage}
+                                            onItemsPerPageChange={setItemsPerPage}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
