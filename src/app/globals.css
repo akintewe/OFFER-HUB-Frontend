@@ -534,3 +534,78 @@ html:has(.app-no-scroll) body {
   background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
   box-shadow: 0 0 8px var(--color-primary), 0 0 4px var(--color-accent);
 }
+
+/* ============================================
+   ONBOARDING TOUR STYLES (react-joyride)
+   ============================================ */
+
+/* All tour buttons base transition */
+.__floater__body button {
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+/* Next button (primary) hover */
+.__floater__body button[data-action="primary"]:hover,
+.react-joyride__tooltip button[data-action="primary"]:hover {
+  box-shadow: 2px 2px 4px #d1d5db, -2px -2px 4px #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+.__floater__body button[data-action="primary"]:active,
+.react-joyride__tooltip button[data-action="primary"]:active {
+  box-shadow: inset 2px 2px 4px #d1d5db, inset -2px -2px 4px #ffffff !important;
+  transform: translateY(0) !important;
+}
+
+/* Back button hover */
+.__floater__body button[data-action="back"]:hover,
+.react-joyride__tooltip button[data-action="back"]:hover {
+  box-shadow: 2px 2px 4px #d1d5db, -2px -2px 4px #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+.__floater__body button[data-action="back"]:active,
+.react-joyride__tooltip button[data-action="back"]:active {
+  box-shadow: inset 2px 2px 4px #d1d5db, inset -2px -2px 4px #ffffff !important;
+  transform: translateY(0) !important;
+}
+
+/* Skip button hover */
+.__floater__body button[data-action="skip"]:hover,
+.react-joyride__tooltip button[data-action="skip"]:hover {
+  color: #6B7280 !important;
+}
+
+/* Close button - smaller and styled */
+.__floater__body button[aria-label="Close"],
+.react-joyride__tooltip button[aria-label="Close"] {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  padding: 2px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.__floater__body button[aria-label="Close"]:hover,
+.react-joyride__tooltip button[aria-label="Close"]:hover {
+  box-shadow: 1px 1px 2px #d1d5db, -1px -1px 2px #ffffff !important;
+  background-color: #E5E7EB !important;
+}
+
+.__floater__body button[aria-label="Close"] svg,
+.react-joyride__tooltip button[aria-label="Close"] svg {
+  width: 10px !important;
+  height: 10px !important;
+  min-width: 10px !important;
+  min-height: 10px !important;
+  max-width: 10px !important;
+  max-height: 10px !important;
+}
